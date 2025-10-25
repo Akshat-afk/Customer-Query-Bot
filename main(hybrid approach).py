@@ -12,14 +12,12 @@ from dotenv import load_dotenv
 load_dotenv()
 app = FastAPI()
 
-# --- Config ---
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)  # type: ignore
 
 genai.configure(api_key=os.getenv("GEN_API_KEY")) # type: ignore
 
-# --- Models ---
 class Query(BaseModel):
     channel: str
     from_: str
@@ -106,7 +104,6 @@ def log_interaction(query, response, confidence):
     with open("logs.json", "a", encoding="utf-8") as f:
         f.write(json.dumps(log) + "\n")
 
-# --- Main Endpoint ---
 @app.post("/api/query")
 async def handle_query(q: Query):
     record = lookup_supabase(q.from_)
