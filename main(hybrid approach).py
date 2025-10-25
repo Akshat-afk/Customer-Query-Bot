@@ -58,7 +58,7 @@ def search_kb(query_text):
 def lookup_supabase(identifier: str):
     try:
         data = supabase.table("authors").select("*").or_(
-            f"email.eq.{identifier},ISBN.eq.{identifier},book.eq.{identifier}"
+            f"email.eq.{identifier},ISBN.eq.{identifier},book.eq.{identifier},phone.eq.{identifier},handle.eq.{identifier}"
         ).execute()
         return data.data[0] if data.data else None
     except Exception as e:
@@ -75,6 +75,8 @@ Use the following context to answer clearly:
 "{context_text}"
 
 Answer concisely in natural language.
+
+If you feel like this is beyond the scope of the context your answer should be "I cant answer this question, escalating your query." ONLY
 """
     try:
         model = genai.GenerativeModel("models/gemini-flash-lite-latest") # type: ignore
@@ -122,8 +124,11 @@ async def handle_query(q: Query):
 
     confidence = 0.9 if kb_hit or record else 0.7
 
-    escalated = confidence < 0.8
+    escalated = True if "escalating" in response_text else False
 
+    if escalated:
+        return escalate(q.text, "I cant answer this question, escalating your query.")
+    
     log_interaction(q.text, response_text, confidence)
 
     return {"response": response_text, "confidence": confidence, "escalated": escalated}
